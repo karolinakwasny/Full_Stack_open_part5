@@ -29,7 +29,7 @@ const App = () => {
   }, [])
 
   const addBlog = (newBlog) => {
-    if (newBlog.author !== user.username){
+    if (newBlog.author !== user.name){
       setNotification({
         message: `You have to be the author to add a blog`,
         success: false,
