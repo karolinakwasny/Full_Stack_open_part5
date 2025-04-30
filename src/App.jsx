@@ -10,9 +10,6 @@ const App = () => {
   const [notification, setNotification] = useState({ message: null, success: true })
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [title, setTitle] = useState('')
-  const [author, setAuthor] = useState('')
-  const [url, setUrl] = useState('')
   const [user, setUser] = useState(null)
   const [showCreate, setShowCreate] = useState(false)
 
@@ -31,14 +28,8 @@ const App = () => {
     }
   }, [])
 
-  const addBlog = (event) => {
-    event.preventDefault()
-    const newBlog = {
-      title: title,
-      author: author,
-      url: url,
-    }
-    if (author !== user.username){
+  const addBlog = (newBlog) => {
+    if (newBlog.author !== user.username){
       setNotification({
         message: `You have to be the author to add a blog`,
         success: false,
@@ -52,9 +43,6 @@ const App = () => {
         .createBlog(newBlog)
         .then(returnedBlog => {
           setBlogs(blogs.concat(returnedBlog))
-          setTitle('')
-          setAuthor('')
-          setUrl('')
           setNotification({
             message: `a new blog ${newBlog.title} by ${newBlog.author} added `,
             success: true,
@@ -115,15 +103,7 @@ const App = () => {
           <button onClick={() => setShowCreate(true)}>new blog</button>
         </div>
         <div style={handleWhenHidden}>
-          <CreateNewBlog
-            addBlog={addBlog}
-            title={title}
-            setTitle={setTitle}
-            author={author}
-            setAuthor={setAuthor}
-            url={url}
-            setUrl={setUrl}
-          />
+          <CreateNewBlog addBlog={addBlog} />
           <button onClick={() => setShowCreate(false)}>cancel</button>
         </div>
       </div>
