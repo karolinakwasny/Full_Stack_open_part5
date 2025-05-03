@@ -67,6 +67,15 @@ const App = () => {
     }
   }
 
+  const handleLike = () => {
+      const updatedBlog = {
+        ...blog,
+        likes: likes + 1
+      }
+      blogService.updateBlog(blog.id, updatedBlog)
+    }
+
+
   const createBlog = () => (
     <Togglable buttonLabel='new blog' ref={blogFormRef}>
       <CreateNewBlog addBlog={addBlog} />
@@ -96,7 +105,8 @@ const App = () => {
               userLoggedIn={user.name}
               blogs={blogs}
               setBlogs={setBlogs}
-              setNotification={setNotification}/>
+              setNotification={setNotification}
+              handleLike={handleLike} />
           )}
       </div>
     )

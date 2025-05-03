@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import blogService from '../services/blogs'
 
-const Blog = ({ blog, userLoggedIn, blogs, setBlogs, setNotification }) => {
+const Blog = ({ blog, userLoggedIn, blogs, setBlogs, setNotification, handleLike }) => {
   const [showDetails, setShowDetails] = useState(false)
   const [likes, setLikes] = useState(blog.likes)
   const [loggedIn, setLoggedIn] = useState(userLoggedIn === blog.author)
@@ -31,19 +31,6 @@ const Blog = ({ blog, userLoggedIn, blogs, setBlogs, setNotification }) => {
     }
   }
 
-  const handleLike = (event) => {
-    event.preventDefault()
-    const updatedBlog = {
-      ...blog,
-      likes: likes + 1
-    }
-
-    blogService
-      .updateBlog(blog.id, updatedBlog)
-      .then(returnedBlog => {
-        setLikes(returnedBlog.likes)
-      })
-  }
 
   return (
     <div style={blogStyle} className='test-blog'>
@@ -56,7 +43,11 @@ const Blog = ({ blog, userLoggedIn, blogs, setBlogs, setNotification }) => {
       {showDetails && (
         <div className='test-blog-details'>
           <div>{blog.url}</div>
-          <form onSubmit={handleLike}>
+          <form onSubmit={(e) => {
+            e.preventDefault()
+            handleLike()
+            setLikes(likes + 1)
+          }}>
             likes {likes} <button type="submit">like</button>
           </form>
           <div>{blog.author}</div>

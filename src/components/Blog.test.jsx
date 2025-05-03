@@ -3,7 +3,7 @@ import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Blog from './Blog'
-import { expect } from 'vitest'
+import { expect, test } from 'vitest'
 
 test('renders blog title and author by default and url and likes when clicked on view', async () => {
   const blog = {
@@ -36,4 +36,26 @@ test('renders blog title and author by default and url and likes when clicked on
 
   const detailsSection = container.querySelector('.test-blog-details')
   expect(detailsSection).toBeInTheDocument()
+})
+
+test('updates likes when button is clicked on twice', async () => {
+  const blog = {
+	title: 'A really interesting blog',
+	author: 'John Doe',
+	url: 'https://blog.com',
+	likes: 0,
+  }
+  const mockHandler = vi.fn()
+  render(<Blog blog={blog} handleLike={mockHandler} />)
+
+  const user = userEvent.setup()
+  const view_button = screen.getByText('view')
+  await user.click(view_button)
+
+  const like_button = screen.getByText('like')
+  await user.click(like_button)
+  await user.click(like_button)
+
+  expect(mockHandler.mock.calls).toHaveLength(2)
+
 })
