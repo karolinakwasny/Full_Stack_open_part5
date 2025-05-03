@@ -46,7 +46,7 @@ const Blog = ({ blog, userLoggedIn, blogs, setBlogs, setNotification }) => {
   }
 
   return (
-    <div style={blogStyle}>
+    <div style={blogStyle} className='test-blog'>
       <div>
         {blog.title} ~ {blog.author}
         <button onClick={() => setShowDetails(!showDetails)}>
@@ -54,7 +54,7 @@ const Blog = ({ blog, userLoggedIn, blogs, setBlogs, setNotification }) => {
         </button>
       </div>
       {showDetails && (
-        <div>
+        <div className='test-blog-details'>
           <div>{blog.url}</div>
           <form onSubmit={handleLike}>
             likes {likes} <button type="submit">like</button>
