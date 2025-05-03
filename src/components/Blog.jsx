@@ -1,9 +1,7 @@
 import React, { useState } from 'react'
-import blogService from '../services/blogs'
 
-const Blog = ({ blog, userLoggedIn, blogs, setBlogs, setNotification, handleLike }) => {
+const Blog = ({ blog, userLoggedIn, handleLike, handleRemove }) => {
   const [showDetails, setShowDetails] = useState(false)
-  const [likes, setLikes] = useState(blog.likes)
   const [loggedIn, setLoggedIn] = useState(userLoggedIn === blog.author)
   const blogStyle = {
     paddingTop: 10,
@@ -12,25 +10,6 @@ const Blog = ({ blog, userLoggedIn, blogs, setBlogs, setNotification, handleLike
     borderWidth: 1,
     marginBottom: 5
   }
-
-  const handleRemove = () => {
-    const title = blog.title
-    if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
-      blogService
-        .deleteBlog(blog.id)
-        .then(() => {
-          setBlogs(blogs.filter(b => b.id !== blog.id))
-          setNotification({
-            message: `blog "${title}" removed `,
-            success: true,
-          })
-          setTimeout(() => {
-            setNotification({ message: null, success: true })
-          }, 5000)
-        })
-    }
-  }
-
 
   return (
     <div style={blogStyle} className='test-blog'>
@@ -43,16 +22,11 @@ const Blog = ({ blog, userLoggedIn, blogs, setBlogs, setNotification, handleLike
       {showDetails && (
         <div className='test-blog-details'>
           <div>{blog.url}</div>
-          <form onSubmit={(e) => {
-            e.preventDefault()
-            handleLike()
-            setLikes(likes + 1)
-          }}>
-            likes {likes} <button type="submit">like</button>
-          </form>
+          likes {blog.likes}
+          <button onClick={() => handleLike(blog)}>like</button>
           <div>{blog.author}</div>
           {loggedIn && (
-            <button onClick={handleRemove}>remove</button>
+            <button onClick={() => handleRemove(blog)}>remove</button>
           )}
         </div>
       )}

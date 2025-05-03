@@ -40,10 +40,10 @@ test('renders blog title and author by default and url and likes when clicked on
 
 test('updates likes when button is clicked on twice', async () => {
   const blog = {
-	title: 'A really interesting blog',
-	author: 'John Doe',
-	url: 'https://blog.com',
-	likes: 0,
+    title: 'A really interesting blog',
+    author: 'John Doe',
+    url: 'https://blog.com',
+    likes: 0,
   }
   const mockHandler = vi.fn()
   render(<Blog blog={blog} handleLike={mockHandler} />)

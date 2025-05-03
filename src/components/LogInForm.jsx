@@ -1,7 +1,7 @@
-import PropTypes from 'prop-types'
 import React, { useState } from 'react'
 import loginService from '../services/login'
 import blogService from '../services/blogs'
+import { notifyUser } from '../utils/notifications'
 
 const LogInForm = ({ setUser, setNotification }) => {
   const [username, setUsername] = useState('')
@@ -21,13 +21,11 @@ const LogInForm = ({ setUser, setNotification }) => {
       setUsername('')
       setPassword('')
     } catch (exception) {
-      setNotification({
-        message: 'wrong username or password',
-        success: false,
-      })
-      setTimeout(() => {
-        setNotification({ message: null, success: true })
-      }, 5000)
+      notifyUser(
+        setNotification,
+        'wrong username or password',
+        false
+      )
     }
   }
 

@@ -6,6 +6,7 @@ import CreateNewBlog from './components/CreateBlog'
 import LogInForm from './components/LogInForm'
 import LogOutForm from './components/LogOutForm'
 import Togglable from './components/Toggable'
+import { notifyUser } from './utils/notifications'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
@@ -33,48 +34,57 @@ const App = () => {
   const addBlog = (newBlog) => {
     blogFormRef.current.toggleVisibility()
     if (newBlog.author !== user.name){
-      setNotification({
-        message: 'You have to be the author to add a blog',
-        success: false,
-      })
-      setTimeout(() => {
-        setNotification({ message: null, success: true })
-      }, 5000)
+      notifyUser(
+        setNotification,
+        'You can only add blogs with your own name',
+        false)
     }
     else{
       blogService
         .createBlog(newBlog)
         .then(returnedBlog => {
           setBlogs(blogs.concat(returnedBlog))
-          setNotification({
-            message: `a new blog ${newBlog.title} by ${newBlog.author} added `,
-            success: true,
-          })
-          setTimeout(() => {
-            setNotification({ message: null, success: true })
-          }, 5000)
+          notifyUser(
+            setNotification,
+            `a new blog ${returnedBlog.title} by ${returnedBlog.author} added`,
+            true
+          )
         })
         .catch(error => {
           const errorMessage = error.response.data.error
-          setNotification({
-            message: `${errorMessage}`,
-            success: false,
-          })
-          setTimeout(() => {
-            setNotification({ message: null, success: true })
-          }, 5000)
+          notifyUser(
+            setNotification,
+            errorMessage,
+            false
+          )
         })
     }
   }
 
-  const handleLike = () => {
-      const updatedBlog = {
-        ...blog,
-        likes: likes + 1
-      }
-      blogService.updateBlog(blog.id, updatedBlog)
+  const handleLike = async (blog) => {
+    const updatedBlog = {
+      ...blog,
+      likes: blog.likes + 1
     }
+    const returnedBlog = await blogService.updateBlog(blog.id, updatedBlog)
+    setBlogs(blogs.map(b => b.id === blog.id ? returnedBlog : b))
+  }
 
+  const handleRemove = (blog) => {
+    const title = blog.title
+    if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
+      blogService
+        .deleteBlog(blog.id)
+        .then(() => {
+          setBlogs(blogs.filter(b => b.id !== blog.id))
+          notifyUser(
+            setNotification,
+            `blog ${title} removed`,
+            true
+          )
+        })
+    }
+  }
 
   const createBlog = () => (
     <Togglable buttonLabel='new blog' ref={blogFormRef}>
@@ -103,10 +113,8 @@ const App = () => {
             <Blog key={blog.id}
               blog={blog}
               userLoggedIn={user.name}
-              blogs={blogs}
-              setBlogs={setBlogs}
-              setNotification={setNotification}
-              handleLike={handleLike} />
+              handleLike={handleLike}
+              handleRemove={handleRemove} />
           )}
       </div>
     )
