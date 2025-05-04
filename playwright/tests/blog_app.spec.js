@@ -70,6 +70,21 @@ test.describe('Blog app', () => {
         await expect(page.getByText('https://second-url.com')).toBeVisible()
         await expect(page.getByText('likes 1')).toBeVisible()
       })
+
+      test('it can be removed by the user who created it', async ({ page }) => {
+        const blog = await page.getByText('First title ~ Test User')
+        await blog.getByRole('button', { name: 'view' }).click()
+
+        await expect(page.getByRole('button', { name: 'remove' })).toBeVisible()
+        page.on('dialog', async dialog => {
+          console.log(dialog.message())
+          await dialog.accept()
+        })
+        await page.getByRole('button', { name: 'remove' }).click()
+
+        await expect(page.getByText('blog First title removed')).toBeVisible()
+        await expect(page.getByText('First title ~ Test User')).not.toBeVisible()
+      })
     })
   })
 })
