@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loginWith } from './helper.js'
+import { loginWith, createBlog } from './helper.js'
 
 test.describe('Blog app', () => {
 
@@ -36,8 +36,7 @@ test.describe('Blog app', () => {
     test('fails with wrong credentials', async ({ page }) => {
       await loginWith(page, 'wrong username', 'wrong password')
 
-      const locator = await page.getByText('wrong username or password')
-      await expect(locator).toBeVisible()
+      await expect(page.getByText('wrong username or password')).toBeVisible()
     })
   })
 
@@ -48,17 +47,29 @@ test.describe('Blog app', () => {
     })
 
     test('a new blog can be created', async ({ page }) => {
-      await page.getByRole('button', { name: 'new blog' }).click()
-      await page.getByPlaceholder('Title').fill('Test title')
-      await page.getByPlaceholder('Author').fill('Test User')
-      await page.getByPlaceholder('Url').fill('https://url.com')
-      await page.getByRole('button', { name: 'create' }).click()
+      await createBlog(page, 'Test title', 'Test User', 'https://url.com')
 
-      const locator = await page.getByText('a new blog Test title by Test User added')
-      await expect(locator).toBeVisible()
+      await expect(page.getByText('a new blog Test title by Test User added')).toBeVisible()
+      await expect(page.getByText('Test title ~ Test User')).toBeVisible()
+    })
 
-      const blog = await page.getByText('Test title ~ Test User')
-      await expect(blog).toBeVisible()
+    test.describe('and a blogs exists', () => {
+      test.beforeEach(async ({ page }) => {
+        await createBlog(page, 'First title', 'Test User', 'https://first-url.com')
+        await createBlog(page, 'Second title', 'Test User', 'https://second-url.com')
+        await createBlog(page, 'Third title', 'Test User', 'https://third-url.com')
+      })
+
+      test('it can be liked', async ({ page }) => {
+        const blog = await page.getByText('Second title ~ Test User')
+        await blog.getByRole('button', { name: 'view' }).click()
+
+        await expect(page.getByRole('button', { name: 'like' })).toBeVisible()
+        await page.getByRole('button', { name: 'like' }).click()
+
+        await expect(page.getByText('https://second-url.com')).toBeVisible()
+        await expect(page.getByText('likes 1')).toBeVisible()
+      })
     })
   })
 })
