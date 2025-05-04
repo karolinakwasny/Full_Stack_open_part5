@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test'
-import { loginWith, createBlog } from './helper.js'
+import { loginWith, createBlog, likeBlog } from './helper.js'
 
 test.describe('Blog app', () => {
 
   test.beforeEach(async ({ page, request }) => {
-    await request.post('http://localhost:3003/api/testing/reset')
-    await request.post('http://localhost:3003/api/users', {
+    await request.post('/api/testing/reset')
+    await request.post('/api/users', {
       data: {
         name: 'Test User',
         username: 'test',
@@ -13,7 +13,7 @@ test.describe('Blog app', () => {
       }
     })
 
-    await page.goto('http://localhost:5173')
+    await page.goto('/')
   })
 
   test('login form is shown', async ({ page }) => {
@@ -34,9 +34,14 @@ test.describe('Blog app', () => {
     })
 
     test('fails with wrong credentials', async ({ page }) => {
-      await loginWith(page, 'wrong username', 'wrong password')
+      await loginWith(page, 'test', 'wrong password')
 
-      await expect(page.getByText('wrong username or password')).toBeVisible()
+      const errorDiv = await page.locator('.notification')
+      await expect(errorDiv).toContainText('wrong username or password')
+      await expect(errorDiv).toHaveCSS('border-style', 'solid')
+      await expect(errorDiv).toHaveCSS('color', 'rgb(255, 0, 0)')
+
+      await expect(page.getByText('Test User logged-in')).not.toBeVisible()
     })
   })
 
@@ -61,11 +66,7 @@ test.describe('Blog app', () => {
       })
 
       test('it can be liked', async ({ page }) => {
-        const blog = await page.getByText('Second title ~ Test User')
-        await blog.getByRole('button', { name: 'view' }).click()
-
-        await expect(page.getByRole('button', { name: 'like' })).toBeVisible()
-        await page.getByRole('button', { name: 'like' }).click()
+        await likeBlog(page, 'Second title', 1)
 
         await expect(page.getByText('https://second-url.com')).toBeVisible()
         await expect(page.getByText('likes 1')).toBeVisible()
@@ -89,7 +90,7 @@ test.describe('Blog app', () => {
       test('it cannot be removed by another user', async ({ page, request }) => {
         await page.getByText('logout').click()
 
-        await request.post('http://localhost:3003/api/users', {
+        await request.post('/api/users', {
           data: {
             name: 'New User',
             username: 'newuser',
@@ -107,6 +108,22 @@ test.describe('Blog app', () => {
         const newBlog = await page.getByText('New title ~ New User')
         await newBlog.getByRole('button', { name: 'view' }).click()
         await expect(page.getByRole('button', { name: 'remove' })).toBeVisible()
+      })
+
+      test('blogs are ordered according to likes', async ({ page }) => {
+        await likeBlog(page, 'Third title', 3)
+        await likeBlog(page, 'Second title', 2)
+        await likeBlog(page, 'First title', 1)
+
+        const blogs = await page.locator('.test-blog-title')
+        await expect(blogs.nth(0)).toContainText('Third title')
+        await expect(blogs.nth(1)).toContainText('Second title')
+        await expect(blogs.nth(2)).toContainText('First title')
+
+        const blogDetails = await page.locator('.test-blog-details')
+        await expect(blogDetails.nth(0)).toContainText('likes 3')
+        await expect(blogDetails.nth(1)).toContainText('likes 2')
+        await expect(blogDetails.nth(2)).toContainText('likes 1')
       })
     })
   })
