@@ -2,7 +2,16 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Blog app', () => {
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, request }) => {
+    await request.post('http://localhost:3003/api/testing/reset')
+    await request.post('http://localhost:3003/api/users', {
+      data: {
+        name: 'Test User',
+        username: 'test',
+        password: 'password'
+      }
+    })
+
     await page.goto('http://localhost:5173')
   })
 
@@ -15,11 +24,24 @@ test.describe('Blog app', () => {
     await expect(page.getByRole('button', { name: 'login' })).toBeVisible()
   })
 
-  test('user can login', async ({ page }) => {
-    await page.getByTestId('username').fill('test')
-    await page.getByTestId('password').fill('password')
-    await page.getByRole('button', { name: 'login' }).click()
+  test.describe('login', () => {
 
-    await expect(page.getByText('Test User logged-in')).toBeVisible()
+    test('succeeds with correct credentials', async ({ page }) => {
+      await page.getByTestId('username').fill('test')
+      await page.getByTestId('password').fill('password')
+      await page.getByRole('button', { name: 'login' }).click()
+
+      await expect(page.getByText('Test User logged-in')).toBeVisible()
+    })
+
+    test('fails with wrong credentials', async ({ page }) => {
+      await page.getByTestId('username').fill('wrong username')
+      await page.getByTestId('password').fill('wrong password')
+      await page.getByRole('button', { name: 'login' }).click()
+
+      const locator = await page.getByText('wrong username or password')
+      await expect(locator).toBeVisible()
+    })
   })
+
 })
