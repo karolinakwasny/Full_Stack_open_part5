@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { loginWith } from './helper.js'
 
 test.describe('Blog app', () => {
 
@@ -27,21 +28,37 @@ test.describe('Blog app', () => {
   test.describe('login', () => {
 
     test('succeeds with correct credentials', async ({ page }) => {
-      await page.getByTestId('username').fill('test')
-      await page.getByTestId('password').fill('password')
-      await page.getByRole('button', { name: 'login' }).click()
+      await loginWith(page, 'test', 'password')
 
       await expect(page.getByText('Test User logged-in')).toBeVisible()
     })
 
     test('fails with wrong credentials', async ({ page }) => {
-      await page.getByTestId('username').fill('wrong username')
-      await page.getByTestId('password').fill('wrong password')
-      await page.getByRole('button', { name: 'login' }).click()
+      await loginWith(page, 'wrong username', 'wrong password')
 
       const locator = await page.getByText('wrong username or password')
       await expect(locator).toBeVisible()
     })
   })
 
+  test.describe('when logged in', () => {
+
+    test.beforeEach(async ({ page }) => {
+      await loginWith(page, 'test', 'password')
+    })
+
+    test('a new blog can be created', async ({ page }) => {
+      await page.getByRole('button', { name: 'new blog' }).click()
+      await page.getByPlaceholder('Title').fill('Test title')
+      await page.getByPlaceholder('Author').fill('Test User')
+      await page.getByPlaceholder('Url').fill('https://url.com')
+      await page.getByRole('button', { name: 'create' }).click()
+
+      const locator = await page.getByText('a new blog Test title by Test User added')
+      await expect(locator).toBeVisible()
+
+      const blog = await page.getByText('Test title ~ Test User')
+      await expect(blog).toBeVisible()
+    })
+  })
 })
