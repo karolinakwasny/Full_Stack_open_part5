@@ -85,6 +85,29 @@ test.describe('Blog app', () => {
         await expect(page.getByText('blog First title removed')).toBeVisible()
         await expect(page.getByText('First title ~ Test User')).not.toBeVisible()
       })
+
+      test('it cannot be removed by another user', async ({ page, request }) => {
+        await page.getByText('logout').click()
+
+        await request.post('http://localhost:3003/api/users', {
+          data: {
+            name: 'New User',
+            username: 'newuser',
+            password: 'password'
+          }
+        })
+
+        await loginWith(page, 'newuser', 'password')
+        await createBlog(page, 'New title', 'New User', 'https://new-url.com')
+
+        const oldBlog = await page.getByText('First title ~ Test User')
+        await oldBlog.getByRole('button', { name: 'view' }).click()
+        await expect(page.getByRole('button', { name: 'remove' })).not.toBeVisible()
+
+        const newBlog = await page.getByText('New title ~ New User')
+        await newBlog.getByRole('button', { name: 'view' }).click()
+        await expect(page.getByRole('button', { name: 'remove' })).toBeVisible()
+      })
     })
   })
 })
